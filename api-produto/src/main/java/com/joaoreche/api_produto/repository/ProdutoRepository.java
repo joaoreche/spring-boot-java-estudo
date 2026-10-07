@@ -1,11 +1,12 @@
 package com.joaoreche.api_produto.repository;
 
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Optional;
 
+import com.joaoreche.api_produto.exception.ResourceNotFoundException;
 import com.joaoreche.api_produto.model.Produto;
+
 import org.springframework.stereotype.Repository;
 
 // indica para o spring que isso é um repository e passa a gerenciar a classe (injeção de dependência)
@@ -32,7 +33,7 @@ public class ProdutoRepository {
      * @return um produto caso ele seja encontrado
      */
     public Optional<Produto> obterPorId(Integer id) {
-        return produtos.stream().filter(produto -> produto.getId() == id).findFirst();
+        return produtos.stream().filter(produto -> produto.getId().equals(id)).findFirst();
     }
 
     /**
@@ -57,7 +58,12 @@ public class ProdutoRepository {
      * @param id do produto a ser deletado
      */
     public void deleteProduto(Integer id) {
-        produtos.removeIf(produto -> produto.getId() == id);
+        
+        boolean removido = produtos.removeIf(produto -> produto.getId().equals(id));
+
+        if(!removido) {
+            throw new ResourceNotFoundException("Produto não encontrado");
+        }
     }
 
     /**
@@ -72,12 +78,12 @@ public class ProdutoRepository {
         Optional<Produto> produtoEncontrado = obterPorId(produto.getId());
 
         if (produtoEncontrado.isEmpty()) {
-            throw new InputMismatchException("Produto não encontrado");
+            throw new ResourceNotFoundException("Produto não encontrado");
         }
-        // Remover produto antigo da lista
-        deleteProduto(produto.getId());
-        // Adicionar produto atualizado
-        produtos.add(produto);
+        produtoEncontrado.get().setNome(produto.getNome());
+        produtoEncontrado.get().setObservacao(produto.getObservacao());
+        produtoEncontrado.get().setQuantidade(produto.getQuantidade());
+        produtoEncontrado.get().setValor(produto.getValor());
 
         return produto;
     }
