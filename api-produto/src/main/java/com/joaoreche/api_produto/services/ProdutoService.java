@@ -1,82 +1,137 @@
 package com.joaoreche.api_produto.services;
 
 import java.util.List;
-import java.util.Optional;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import com.joaoreche.api_produto.exception.ResourceNotFoundException;
 import com.joaoreche.api_produto.model.Produto;
 import com.joaoreche.api_produto.repository.ProdutoRepository;
+import com.joaoreche.api_produto.shared.ProdutoDTO;
 
-// indica para o spring que isso é um service e passa a gerenciar a classe (injeção de dependência)
+/**
+ * Camada de serviço responsável pelas regras de negócio relacionadas a produtos.
+ *
+ * Realiza a conversão entre a entidade Produto e o ProdutoDTO,
+ * delegando as operações de persistência ao ProdutoRepository.
+ */
+// Indica ao Spring que essa classe é um Service, gerenciando seu ciclo de vida (injeção de dependência)
 @Service
 public class ProdutoService {
 
     /**
-     * Injeção de dependência via construtor
-     * 
-     * Ao declarar o repositório como 'private final', garantimos que a dependência
-     * seja imutável e obrigatoriamente fornecida no momento em que esta classe é
-     * criada
-     * 
-     * O Spring detecta automaticamente este construtor único e injeta a instância
-     * de 'ProdutoRepository' sem a necessidade da anotação @Autowired
+     * Injeção de dependência via construtor.
+     *
+     * O Spring detecta automaticamente este construtor e injeta as instâncias
+     * sem necessidade da anotação @Autowired.
      */
     private final ProdutoRepository produtoRepository;
+    private final ModelMapper mapper;
 
-    public ProdutoService(ProdutoRepository produtoRepository) {
+    public ProdutoService(ProdutoRepository produtoRepository, ModelMapper mapper) {
         this.produtoRepository = produtoRepository;
+        this.mapper = mapper;
     }
 
     /**
-     * Método que retorna todos os produtos da lista
-     * 
-     * @return lista de produtos
+     * Retorna todos os produtos cadastrados no banco de dados.
+     *
+     * @return lista de DTOs com os dados de todos os produtos
      */
-    public List<Produto> obterTodos() {
-        return produtoRepository.obterTodos();
+    public List<ProdutoDTO> obterTodos() {
+
+        // Obtém a lista de entidades Produto do banco de dados
+        List<Produto> produtos = produtoRepository.findAll();
+
+        // Converte cada entidade Produto para ProdutoDTO antes de retornar ao Controller
+        return produtos.stream()
+                .map(produto -> mapper.map(produto, ProdutoDTO.class))
+                .toList();
     }
 
     /**
-     * Método que retorna o produto encontrado pelo seu id
-     * 
-     * @param id do produto que será localizado
-     * @return um produto caso ele seja encontrado
+     * Busca um produto pelo seu identificador único.
+     *
+     * @param id identificador do produto
+     * @return DTO com os dados do produto encontrado
+     * @throws ResourceNotFoundException se nenhum produto for encontrado com o id informado
      */
-    public Optional<Produto> obterPorId(Integer id) {
-        return produtoRepository.obterPorId(id);
+    public ProdutoDTO obterPorId(Integer id) {
+
+        // Busca o produto no banco; lança exceção automaticamente se não encontrado
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Produto com id:" + id + " não foi encontrado"));
+
+        // Converte a entidade Produto para ProdutoDTO e retorna
+        return mapper.map(produto, ProdutoDTO.class);
     }
 
     /**
-     * Método para adicionar um produto na lista
-     * 
-     * @param produto que será adicionado
-     * @return o produto que foi adicionado
+     * Cadastra um novo produto no banco de dados.
+     *
+     * @param produtoDto dados do produto a ser cadastrado
+     * @return DTO com os dados do produto após o cadastro, incluindo o id gerado
      */
-    public Produto addProduto(Produto produto) {
-        return produtoRepository.addProduto(produto);
+    public ProdutoDTO addProduto(ProdutoDTO produtoDto) {
+
+        // Remove o id para garantir que a operação seja de cadastro (INSERT), não de atualização
+        produtoDto.setId(null);
+
+        // Converte o ProdutoDTO para a entidade Produto gerenciada pelo JPA
+        Produto produto = mapper.map(produtoDto, Produto.class);
+
+        // Persiste o produto no banco e obtém a entidade salva (com o id gerado)
+        Produto salvo = produtoRepository.save(produto);
+
+        // Converte a entidade salva (com id) de volta para ProdutoDTO e retorna
+        return mapper.map(salvo, ProdutoDTO.class);
     }
 
     /**
-     * Método para deletar um produto por id
-     * 
-     * @param id do produto a ser deletado
+     * Remove um produto do banco de dados pelo seu identificador único.
+     *
+     * @param id identificador do produto a ser removido
+     * @throws ResourceNotFoundException se nenhum produto for encontrado com o id informado
      */
     public void deleteProduto(Integer id) {
-        produtoRepository.deleteProduto(id);
+
+        // Verifica se o produto existe antes de tentar deletar
+        if (!produtoRepository.existsById(id)) {
+            throw new ResourceNotFoundException(
+                    "Não foi possível deletar o produto com id:" + id + ". Produto não existe!");
+        }
+
+        produtoRepository.deleteById(id);
     }
 
     /**
-     * Método para atualizar um produto na lista
-     * 
-     * @param produto que será atualizado
-     * @return produto após atualizar a lista
+     * Atualiza os dados de um produto existente no banco de dados.
+     *
+     * @param id         identificador do produto a ser atualizado
+     * @param produtoDto novos dados do produto
+     * @return DTO com os dados do produto após a atualização
+     * @throws ResourceNotFoundException se nenhum produto for encontrado com o id informado
      */
-    public Produto updateProduto(Integer id, Produto produto) {
+    public ProdutoDTO updateProduto(Integer id, ProdutoDTO produtoDto) {
 
-        produto.setId(id);
+        // Verifica se o produto existe antes de tentar atualizar
+        if (!produtoRepository.existsById(id)) {
+            throw new ResourceNotFoundException(
+                    "Não foi possível atualizar o produto com id:" + id + ". Produto não existe!");
+        }
 
-        return produtoRepository.updateProduto(produto);
+        // Define o id no DTO para garantir que a operação seja de atualização (UPDATE)
+        produtoDto.setId(id);
 
+        // Converte o ProdutoDTO para a entidade Produto gerenciada pelo JPA
+        Produto produtoConvertido = mapper.map(produtoDto, Produto.class);
+
+        // Persiste as alterações no banco (o JPA identifica como UPDATE por conta do id definido)
+        Produto salvo = produtoRepository.save(produtoConvertido);
+
+        // Converte a entidade atualizada de volta para ProdutoDTO e retorna
+        return mapper.map(salvo, ProdutoDTO.class);
     }
 }

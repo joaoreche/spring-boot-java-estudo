@@ -1,30 +1,13 @@
-package com.joaoreche.api_produto.model;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+package com.joaoreche.api_produto.view.model;
 
 /**
- * Entidade JPA que representa um produto no sistema.
- *
- * <p>Mapeada para a tabela {@code produto} no banco de dados PostgreSQL.
- * O Hibernate gerencia automaticamente a criação e atualização do schema
- * com base nos atributos desta classe.</p>
+ * DTO que representa os dados retornados pela API ao cliente após operações com produtos.
  */
-// Indica ao JPA que essa classe é uma entidade, gerando automaticamente uma tabela no banco de dados
-@Entity
-public class Produto {
+public class ProdutoResponse {
 
     // #region Atributos
 
-    /**
-     * Identificador único do produto, gerado automaticamente pelo banco de dados.
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-
     private String nome;
     private String observacao;
     private Double valor;

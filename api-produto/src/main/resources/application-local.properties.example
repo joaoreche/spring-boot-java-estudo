@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# MODELO DE CONFIGURAÇÃO LOCAL (EXEMPLO)
+# ─────────────────────────────────────────────────────────────────────────────
+# INSTRUÇÕES PARA NOVOS DESENVOLVEDORES:
+# 1. Duplique este arquivo na mesma pasta (src/main/resources).
+# 2. Renomeie a cópia para: application-local.properties
+# 3. Ajuste os valores abaixo conforme seu banco de dados local.
+#
+# OBS: O arquivo 'application-local.properties' está no .gitignore para
+# proteger suas credenciais e nunca ser enviado ao GitHub.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── Banco de Dados Local (PostgreSQL) ───────────────────────────────────────
+
+# URL de conexão: troque 'localhost:5432/apiproduto' pelos dados da sua base local
+spring.datasource.url=jdbc:postgresql://localhost:5432/apiproduto
+
+# Usuário do PostgreSQL na sua máquina
+spring.datasource.username=seu_usuario_aqui
+
+# Senha do PostgreSQL na sua máquina
+spring.datasource.password=sua_senha_aqui
+
+# Driver JDBC
+spring.datasource.driver-class-name=org.postgresql.Driver
