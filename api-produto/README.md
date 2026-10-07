@@ -133,7 +133,7 @@ src/main/java/com/joaoreche/api_produto/
 
 ### 2. Clonar o Repositório
 ```bash
-git clone https://github.com/seu-usuario/api-produto.git
+git clone <url-do-repositorio>
 cd api-produto
 ```
 
@@ -200,5 +200,5 @@ curl -X POST http://localhost:8080/api/produtos \
 
 Desenvolvido por **João Reche**.  
 Sinta-se à vontade para se conectar:
-- **GitHub:** [joaoreche](https://github.com/seu-usuario)
-- **LinkedIn:** [João Reche](https://linkedin.com/in/seu-perfil)
+- **GitHub:** [joaoreche](https://github.com/joaoreche)
+- **LinkedIn:** [João Reche](https://linkedin.com/in/joao-reche)
